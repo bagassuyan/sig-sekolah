@@ -9,31 +9,50 @@ class PetaController extends Controller
 {
     public function index()
     {
-        return view('peta');
+        return view('peta.index');
+    }
+
+    
+    public function cari()
+    {
+        return view('peta.cari');
+    }
+
+    public function klaster()
+    {
+        return view('peta.klaster');
+    }
+
+    public function panas()
+    {
+        return view('peta.panas');
     }
 
     public function geojson(Request $request)
     {
-        $features = Sekolah::query()
+        $features = Sekolah::with('profil')
             ->when($request->jenjang, fn ($q, $j) => $q->where('jenjang', $j))
             ->get()
             ->map(fn ($s) => [
                 'type' => 'Feature',
                 'geometry' => [
                     'type' => 'Point',
-                    // GeoJSON: urutan [longitude, latitude]
                     'coordinates' => [$s->longitude, $s->latitude],
-                ],
-                'properties' => [
-                    'npsn'      => $s->npsn,
-                    'nama'      => $s->nama,
-                    'jenjang'   => $s->jenjang,
-                    'status'    => $s->status,
-                    'alamat'    => $s->alamat,
-                    'kecamatan' => $s->kecamatan,
-                    'telepon'   => $s->telepon,
-                ],
-            ]);
+        ],
+        'properties' => [
+            'npsn' => $s->npsn,
+            'nama' => $s->nama,
+            'jenjang' => $s->jenjang,
+            'status' => $s->status,
+            'alamat' => $s->alamat,
+            'kecamatan' => $s->kecamatan,
+            'telepon' => $s->telepon,
+            'kepala_sekolah' => $s->profil?->kepala_sekolah,
+            'akreditasi' => $s->profil?->akreditasi,
+            'jumlah_siswa' => $s->profil?->jumlah_siswa,
+            'jumlah_guru' => $s->profil?->jumlah_guru,
+        ],
+    ]);
 
         return response()->json([
             'type' => 'FeatureCollection',
@@ -41,3 +60,4 @@ class PetaController extends Controller
         ]);
     }
 }
+
